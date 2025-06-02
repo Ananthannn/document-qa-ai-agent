@@ -1,18 +1,23 @@
-import sys
 import os
-import fitz
 import re
+import json
+import fitz
 import pytesseract
+from typing import Optional, Tuple
 from pdf2image import convert_from_path
-import os
-from typing import Optional
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 class PDFReader:
-    def __init__(self, tesseract_path: str = None):
+    def __init__(self, file_path: str, tesseract_path: str = None):
+        """Initialize with auto JSON creation while keeping your original method names"""
         if tesseract_path:
             pytesseract.pytesseract.tesseract_cmd = tesseract_path
+        
+        self.file_path = file_path
+        # Automatically process and save to JSON on initialization
+        file_name, text = self.read_pdf(file_path)
+        file_name = os.path.basename(file_name)
+        with open("output.json", "w") as f:
+            json.dump({file_name: text}, f, indent=2)
 
     @staticmethod
     def clean_text(text: str) -> str:
@@ -47,9 +52,16 @@ class PDFReader:
             print(f"OCR failed: {e}")
             return None
 
-    def read_pdf(self, file_path: str) -> Optional[str]:
+    def read_pdf(self, file_path: str) -> Tuple[str, Optional[str]]:
         """Unified PDF reader with fallback to OCR"""
         text = self.read_text_only_pdf(file_path)
         if text and len(text.strip()) > 10:
-            return text
-        return self.read_scanned_pdf(file_path)
+            return (file_path, text)
+        return (file_path, self.read_scanned_pdf(file_path))
+    
+    def save_text_in_json(self):
+        """Your original method (still works the same way)"""
+        file_name, text = self.read_pdf(self.file_path)
+        file_name = os.path.basename(file_name)
+        with open("output.json", "w") as f:
+            json.dump({file_name: text}, f, indent=2)
