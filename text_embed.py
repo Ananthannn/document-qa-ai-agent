@@ -1,50 +1,57 @@
 import os
 import json
 from sentence_transformers import SentenceTransformer
-from read_pdf import PDFReader
-def process_json_embeddings(json_path="output.json", chunk_size=500):
-    if not os.path.exists(json_path):
-        return
 
-    # Load JSON
-    with open(json_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+class JSONEmbedder:
+    def __init__(self, input_json="output.json", output_json="output_2.json", chunk_size=500, model_name='all-MiniLM-L6-v2'):
+        self.input_json = input_json
+        self.output_json = output_json
+        self.chunk_size = chunk_size
+        self.model = SentenceTransformer(model_name)
 
-    # Initialize model
-    model = SentenceTransformer('all-MiniLM-L6-v2')
-
-    # Helper to chunk text
-    def chunk_text(text):
+    def chunk_text(self, text):
+        """Split text into chunks of approximately chunk_size words"""
         words = text.split()
-        return [' '.join(words[i:i+chunk_size]) for i in range(0, len(words), chunk_size)]
+        return [' '.join(words[i:i + self.chunk_size]) for i in range(0, len(words), self.chunk_size)]
 
-    # Helper to embed text or chunks
-    def embed_text(text):
-        chunks = chunk_text(text)
-        embeddings = model.encode(chunks).tolist()
-        return embeddings
+    def embed_text(self, text):
+        """Embed text chunks using the sentence transformer model"""
+        chunks = self.chunk_text(text)
+        return self.model.encode(chunks).tolist()
 
-    # Replace keys and values with embeddings
-    embedded_data = {}
+    def process(self):
+        """Process the JSON file and save embeddings to a new file"""
+        if not os.path.exists(self.input_json):
+            raise FileNotFoundError(f"Input file {self.input_json} not found.")
+        
+        # Create output directory if it doesn't exist
+        output_dir = os.path.dirname(self.output_json)
+        if output_dir and not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
-    for key, value in data.items():
-        # Embed key
-        embedded_key = embed_text(key)
+        with open(self.input_json, "r", encoding="utf-8") as f:
+            data = json.load(f)
 
-        # Embed value
-        if isinstance(value, str):
-            embedded_value = embed_text(value)
-        else:
-            embedded_value = value  # If it's not a string, keep it as is
+        embedded_data = {}
+        for key, value in data.items():
+            if isinstance(value, str):
+                print(f"Processing {key}...")
+                embedded_value = self.embed_text(value)
+            else:
+                print(f"Skipping {key} (not a string value)")
+                embedded_value = value  # Keep as is if not a string
 
-        # Store in new dict (use str(embedded_key) since keys must be strings)
-        embedded_data[str(embedded_key)] = embedded_value
+            embedded_data[key] = embedded_value
 
-    # Save JSON
-    with open(json_path, "w", encoding="utf-8") as f:
-        json.dump(embedded_data, f, ensure_ascii=False, indent=2)
+        with open(self.output_json, "w", encoding="utf-8") as f:
+            json.dump(embedded_data, f, ensure_ascii=False, indent=2)
+        
+        print(f"Embeddings saved to {self.output_json}")
 
-
-if __name__ == "__main__":
-    PDFReader(r"C:\Users\vanan\OneDrive\Documents\projects\document-qa-ai-agent\samples\for_pdf_text_extraction.pdf", tesseract_path=r"C:\Program Files\Tesseract-OCR\tesseract.exe")
-    process_json_embeddings("output.json")
+embedder = JSONEmbedder(
+        input_json="output.json",
+        output_json="output_2.json",
+        chunk_size=500,
+        model_name='all-MiniLM-L6-v2'
+    )
+embedder.process()
