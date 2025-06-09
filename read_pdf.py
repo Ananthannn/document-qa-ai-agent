@@ -3,37 +3,29 @@ import re
 import json
 import fitz
 import pytesseract
-from typing import Optional, Tuple
 from pdf2image import convert_from_path
+from typing import Optional, Tuple
 
 class PDFReader:
-    def __init__(self, file_path: str, tesseract_path: str = None):
-        
+    def __init__(self, file_path: str, chunk_size=500, tesseract_path: Optional[str] = None):
         if tesseract_path:
             pytesseract.pytesseract.tesseract_cmd = tesseract_path
-        
+
         self.file_path = file_path
-        
-        file_name, text = self.read_pdf(file_path)
-        file_name = os.path.basename(file_name)
-        with open("output.json", "w") as f:
-            json.dump({file_name: text}, f, indent=2)
+        self.chunk_size = chunk_size
 
     @staticmethod
     def clean_text(text: str) -> str:
-        
         text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff]', '', text)
         text = re.sub(r'\s+', ' ', text)
         return text.strip()
 
     def read_text_only_pdf(self, file_path: str) -> Optional[str]:
-        
         try:
             doc = fitz.open(file_path)
             text = ""
             for page in doc:
-                page_text = page.get_text()
-                text += self.clean_text(page_text) + "\n"
+                text += self.clean_text(page.get_text()) + "\n"
             doc.close()
             return text if text.strip() else None
         except Exception as e:
@@ -51,19 +43,31 @@ class PDFReader:
             print(f"OCR failed: {e}")
             return None
 
-    def read_pdf(self, file_path: str) -> Tuple[str, Optional[str]]:
-        
-        text = self.read_text_only_pdf(file_path)
+    def read_pdf(self) -> Optional[str]:
+        text = self.read_text_only_pdf(self.file_path)
         if text and len(text.strip()) > 10:
-            return (file_path, text)
-        return (file_path, self.read_scanned_pdf(file_path))
-    
-    def save_text_in_json(self):
-        file_name, text = self.read_pdf(self.file_path)
-        file_name = os.path.basename(file_name)
-        with open("output.json", "w") as f:
-            json.dump({file_name: text}, f, indent=2)
+            return text
+        return self.read_scanned_pdf(self.file_path)
+
+    def chunk_text(self, text: str) -> list[str]:
+        words = text.split()
+        chunks = [' '.join(words[i:i + self.chunk_size]) for i in range(0, len(words), self.chunk_size)]
+        return chunks
+
+    def save_chunks_to_json(self, output_json="output.json"):
+        text = self.read_pdf()
+        if not text:
+            print("No text extracted from PDF.")
+            return
+
+        chunks = self.chunk_text(text)
+        file_name = os.path.basename(self.file_path)
+
+        with open(output_json, "w", encoding="utf-8") as f:
+            json.dump({file_name: chunks}, f, ensure_ascii=False, indent=2)
+
+        print(f"Text chunks saved to {output_json}")
 
 # Example usage:
-pdf_reader = PDFReader(r"C:\Users\vanan\OneDrive\Documents\projects\document-qa-ai-agent\samples\1809.04281v3_copy (1).pdf", tesseract_path="/usr/bin/tesseract")
-pdf_reader.save_text_in_json()
+# pdf_reader = PDFReader(r"samples\1809.04281v3_copy (1).pdf")
+# pdf_reader.save_chunks_to_json()
