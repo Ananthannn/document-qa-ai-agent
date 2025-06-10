@@ -11,8 +11,12 @@ class VectorDB:
     def load_text_chunks(self):
         with open(self.text_chunk_json, "r", encoding="utf-8") as f:
             data = json.load(f)
-        text_chunks = list(data.values())[0]  
-        documents = [Document(page_content=chunk) for chunk in text_chunks]
+
+        documents = []
+        for file_name, chunks in data.items():
+            for chunk in chunks:
+                documents.append(Document(page_content=chunk, metadata={"source": file_name}))
+
         return documents
 
     def create_vector_db(self):
