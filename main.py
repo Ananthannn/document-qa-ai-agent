@@ -7,10 +7,19 @@ import ollama
 def process_all_pdfs(folder_path):
     """Reads and chunks all PDFs in the folder."""
     pdf_files = glob.glob(os.path.join(folder_path, "*.pdf"))
+    if not pdf_files:
+        print("No PDF files found in the folder.")
+        return False
+
+    success = False
     for pdf_path in pdf_files:
         print(f"[+] Processing {pdf_path}")
         reader = PDFReader(file_path=pdf_path)
         reader.save_chunks_to_json(output_json="output.json")
+        success = True
+
+    return success
+
 
 def create_or_update_vector_db():
     """Embeds all chunks and saves FAISS vector DB."""
@@ -47,13 +56,22 @@ def main():
         print("Invalid folder path. Exiting.")
         return
 
-    process_all_pdfs(pdf_folder)
+    if not process_all_pdfs(pdf_folder):
+        print("No PDFs were processed. Exiting.")
+        return
+
     create_or_update_vector_db()
 
     while True:
         query = input("\nEnter your question (or type 'exit' to quit): ")
         if query.lower() == 'exit':
             break
+
+        if "how many pdf" in query.lower():
+            with open("output.json", "r", encoding="utf-8") as f:
+                data = json.load(f)
+            print(f"\nThere are {len(data)} PDFs processed.\n")
+            continue
 
         docs = search_relevant_docs(query, top_k=5)
         answer = ask_llm(query, docs)
