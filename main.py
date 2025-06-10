@@ -14,7 +14,7 @@ def process_all_pdfs(folder_path):
 
 def create_or_update_vector_db():
     """Embeds all chunks and saves FAISS vector DB."""
-    print("[+] Creating/Updating vector database...")
+    
     vector_db = VectorDB("output.json")
     vector_db.create_vector_db()
     print("[✓] Vector database created and saved.")
@@ -36,14 +36,17 @@ def ask_llm(query, docs):
     source_summary = f"The following documents were retrieved from {len(sources)} PDFs: {', '.join(sources)}.\n\n"
     prompt = source_summary + "Use the following context to answer the question:\n" + context + f"\nQuestion: {query}"
 
-    print("[+] Generating answer using LLM...")
     response = ollama.chat(model='llama3', messages=[
         {"role": "user", "content": prompt}
     ])
     return response['message']['content']
 
 def main():
-    pdf_folder = "pdfs"
+    pdf_folder = input("Enter the folder path containing PDFs: ").strip()
+    if not os.path.isdir(pdf_folder):
+        print("Invalid folder path. Exiting.")
+        return
+
     process_all_pdfs(pdf_folder)
     create_or_update_vector_db()
 
@@ -54,7 +57,8 @@ def main():
 
         docs = search_relevant_docs(query, top_k=5)
         answer = ask_llm(query, docs)
-        print("\n🧠 Answer:\n", answer)
+        print("\nAnswer:\n", answer)
+
 
 if __name__ == "__main__":
     main()
