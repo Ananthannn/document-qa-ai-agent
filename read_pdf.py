@@ -57,17 +57,34 @@ class PDFReader:
     def save_chunks_to_json(self, output_json="output.json"):
         text = self.read_pdf()
         if not text:
-            print("No text extracted from PDF.")
             return
 
         chunks = self.chunk_text(text)
         file_name = os.path.basename(self.file_path)
 
-        with open(output_json, "w", encoding="utf-8") as f:
-            json.dump({file_name: chunks}, f, ensure_ascii=False, indent=2)
+        # Load existing data if output.json exists
+        if os.path.exists(output_json):
+            with open(output_json, "r", encoding="utf-8") as f:
+                try:
+                    data = json.load(f)
+                except json.JSONDecodeError:
+                    data = {}
+        else:
+            data = {}
 
-        print(f"Text chunks saved to {output_json}")
+        # Add or update entry for the new PDF
+        data[file_name] = chunks
+
+        # Save the updated dictionary back to output.json
+        with open(output_json, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+        print(f"Text chunks from {file_name} added to {output_json}")
+
 
 # Example usage:
-# pdf_reader = PDFReader(r"samples\1809.04281v3_copy (1).pdf")
-# pdf_reader.save_chunks_to_json()
+#pdf_reader = PDFReader(r"samples\1809.04281v3_copy (1).pdf")
+#pdf_reader.save_chunks_to_json()
+
+#pdf_reader = PDFReader(r"samples\for_pdf_text_extraction.pdf")
+#pdf_reader.save_chunks_to_json()
