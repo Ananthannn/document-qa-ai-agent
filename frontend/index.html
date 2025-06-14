@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>PDF Q&A Assistant</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <h2>📘 Read a PDF</h2>
+            <form id="uploadForm">
+                <input type="file" 
+                       id="pdfUpload" 
+                       accept=".pdf,application/pdf" 
+                       required />
+                <small>Supported format: PDF only</small>
+            </form>
+            <div id="pdfPreview">PDF Preview will appear here</div>
+        </div>
+        <div class="right-panel">
+            <h2>Ask a Question</h2>
+            <div class="question-section">
+                <input type="text" 
+                       id="questionInput" 
+                       placeholder="Ask a question about the document" 
+                       required />
+                <button id="askButton" disabled>Answer</button>
+            </div>
+            <div id="answerDisplay" class="answer-box">
+                Answer will appear here...
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

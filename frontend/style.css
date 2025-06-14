@@ -1,0 +1,61 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background-color: #0e1624;
+  color: #ffffff;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  padding: 50px;
+  gap: 50px;
+}
+
+.left-panel, .right-panel {
+  background-color: #1c2938;
+  padding: 30px;
+  border-radius: 15px;
+  width: 400px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+}
+
+h2 {
+  color: #62d0ff;
+}
+
+#pdfPreview, #answerDisplay {
+  margin-top: 20px;
+  background-color: #12202f;
+  padding: 20px;
+  border-radius: 10px;
+  min-height: 100px;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 8px;
+  background-color: #243447;
+  color: white;
+}
+
+input[type="file"] {
+  margin-top: 10px;
+}
+
+button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: #297fb8;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #1f5e89;
+}
