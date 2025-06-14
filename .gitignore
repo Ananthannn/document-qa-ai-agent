@@ -1,5 +1,55 @@
-venv310/
+# Python
 __pycache__/
-*.pyc
-.DS_Store
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
 .env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Project specific
+uploaded_pdfs/
+*.pdf
+output.json
+*.faiss
+keys.pickle
+vector_store/
+
+# Logs
+*.log
+logs/
+
+# OS specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Test cache
+.pytest_cache/
+.coverage
+htmlcov/
