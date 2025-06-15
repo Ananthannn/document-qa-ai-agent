@@ -9,7 +9,13 @@ import json
 import shutil
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={
+    r"/*": {
+        "origins": ["http://localhost:3000"],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
+})
 
 UPLOAD_FOLDER = "uploaded_pdfs"
 VECTOR_DB_FOLDER = "vector_stores"
