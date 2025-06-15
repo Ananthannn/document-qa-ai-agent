@@ -13,16 +13,13 @@ export const theme = createTheme({
       dark: '#E45555',
     },
     background: {
-      default: '#1A1B25',   // Dark blue-grey
-      paper: '#242632',     // Slightly lighter blue-grey
+      default: '#13141C',  // Darker base
+      paper: '#1E1F2E',    // Darker paper
     },
     text: {
       primary: '#FFFFFF',
       secondary: '#B0B3C1',
-    },
-    success: {
-      main: '#64FFDA',      // Bright mint
-    },
+    }
   },
   components: {
     MuiPaper: {
@@ -35,10 +32,11 @@ export const theme = createTheme({
     },
     MuiButton: {
       styleOverrides: {
-        root: {
-          textTransform: 'none',
-          fontSize: '1rem',
-          borderRadius: 12,
+        contained: {
+          background: 'linear-gradient(45deg, #6C63FF 30%, #8F88FF 90%)',
+          '&:hover': {
+            background: 'linear-gradient(45deg, #5046E4 30%, #6C63FF 90%)',
+          },
         },
       },
     },

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Container, 
@@ -14,18 +14,16 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import Footer from './components/Footer';
 
-const UploadZone = styled(Paper)(({ theme }) => ({
+const UploadZone = styled(Paper)(({ theme, isDragging }) => ({
   padding: theme.spacing(4),
   textAlign: 'center',
-  backgroundColor: 'rgba(36, 38, 50, 0.8)',
-  backdropFilter: 'blur(10px)',
-  border: `2px dashed ${theme.palette.primary.main}`,
+  backgroundColor: isDragging ? 'rgba(108, 99, 255, 0.1)' : 'rgba(36, 38, 50, 0.8)',
+  border: `2px dashed ${isDragging ? theme.palette.primary.main : 'rgba(108, 99, 255, 0.3)'}`,
   cursor: 'pointer',
   transition: 'all 0.3s ease',
   '&:hover': {
-    borderColor: theme.palette.primary.light,
+    borderColor: theme.palette.primary.main,
     transform: 'translateY(-2px)',
-    boxShadow: `0 8px 20px ${theme.palette.primary.main}25`,
   },
 }));
 
@@ -56,6 +54,19 @@ function App() {
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      const x = (e.clientX / window.innerWidth) * 100;
+      const y = (e.clientY / window.innerHeight) * 100;
+      setMousePosition({ x, y });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   const handleFileUpload = async (event) => {
     const files = Array.from(event.target.files);
@@ -104,13 +115,78 @@ function App() {
     }
   };
 
+  const handleDragOver = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(event.dataTransfer.files).filter(
+      file => file.type === 'application/pdf'
+    );
+
+    if (files.length === 0) {
+      setAnswer('❌ Please upload only PDF files');
+      return;
+    }
+
+    setLoading(true);
+    const formData = new FormData();
+    files.forEach(file => formData.append('pdf', file));
+
+    try {
+      const response = await fetch('http://localhost:5000/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) throw new Error('Upload failed');
+      
+      const data = await response.json();
+      setFile(files);
+      setAnswer('✨ PDFs uploaded successfully! Ask me anything about them.');
+    } catch (error) {
+      setAnswer('❌ Upload failed. Please try again.');
+      setFile(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Box sx={{ 
       minHeight: '100vh',
-      background: 'linear-gradient(145deg, #1A1B25 0%, #2C2A3C 100%)',
+      background: `radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, 
+        rgba(108, 99, 255, 0.15) 0%, 
+        rgba(30, 31, 46, 0.8) 25%, 
+        #13141C 100%)`,
+      position: 'relative',
       py: 4,
-      display: 'flex',
-      flexDirection: 'column',
+      transition: 'background 0.3s ease',
+      '&::before': {
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: `radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, 
+          rgba(108, 99, 255, 0.1) 0%, 
+          transparent 60%)`,
+        pointerEvents: 'none',
+        transition: 'background 0.3s ease',
+      }
     }}>
       <Container maxWidth="md">
         <Stack spacing={4}>
@@ -119,16 +195,36 @@ function App() {
             align="center"
             sx={{ 
               mb: 2,
-              background: 'linear-gradient(45deg, #94B3FD, #FFB3B3)',
+              background: 'linear-gradient(45deg, #6C63FF, #8F88FF)',
               backgroundClip: 'text',
               WebkitBackgroundClip: 'text',
               color: 'transparent',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'scale(1.02)',
+                background: 'linear-gradient(45deg, #8F88FF, #6C63FF)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+              }
             }}
           >
             PDF Bestie ✨
           </Typography>
 
-          <UploadZone>
+          <UploadZone
+            isDragging={isDragging}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            sx={{
+              '&:hover': {
+                borderColor: 'primary.main',
+                transform: 'translateY(-2px)',
+                boxShadow: '0 8px 20px rgba(108, 99, 255, 0.15)',
+                background: 'linear-gradient(145deg, rgba(36, 38, 50, 0.9) 0%, rgba(44, 42, 60, 0.9) 100%)',
+              }
+            }}
+          >
             <input
               accept="application/pdf"
               style={{ display: 'none' }}
@@ -140,25 +236,18 @@ function App() {
             />
             <label htmlFor="pdf-upload">
               <Stack spacing={2} alignItems="center">
-                <CloudUploadIcon sx={{ fontSize: 48, color: 'primary.main' }} />
-                <Typography 
-                  variant="h6" 
+                <CloudUploadIcon 
                   sx={{ 
-                    color: '#8B9DFF',  // Light purple
-                    fontWeight: 500,
-                    mb: 1
-                  }}
-                >
-                  Drop your PDFs here
+                    fontSize: 48, 
+                    color: isDragging ? 'primary.main' : 'primary.light',
+                    transform: isDragging ? 'scale(1.1)' : 'scale(1)',
+                    transition: 'all 0.3s ease'
+                  }} 
+                />
+                <Typography variant="h6" color="primary.main">
+                  {isDragging ? 'Drop PDFs here' : 'Drop your PDFs here'}
                 </Typography>
-
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    color: '#B3C0FF',  // Lighter purple
-                    opacity: 0.8 
-                  }}
-                >
+                <Typography variant="body2" color="text.secondary">
                   or click to choose files
                 </Typography>
                 {file && (
@@ -198,7 +287,14 @@ function App() {
                 onClick={handleQuestionSubmit}
                 disabled={!file || !question.trim() || loading}
                 endIcon={loading ? <CircularProgress size={20} /> : <SendRoundedIcon />}
-                sx={{ alignSelf: 'flex-end' }}
+                sx={{ 
+                  alignSelf: 'flex-end',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 4px 15px rgba(108, 99, 255, 0.2)',
+                  }
+                }}
               >
                 Ask Away!
               </Button>
