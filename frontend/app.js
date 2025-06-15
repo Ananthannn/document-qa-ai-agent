@@ -3,57 +3,65 @@ const questionInput = document.getElementById("questionInput");
 const answerBox = document.getElementById("answerDisplay");
 const pdfUpload = document.getElementById("pdfUpload");
 const previewElement = document.getElementById("pdfPreview");
+const uploadArea = document.getElementById("uploadArea");
 
-// Initially disable ask button until PDF is uploaded
-askButton.disabled = true;
+function setLoading(isLoading) {
+    askButton.classList.toggle('loading', isLoading);
+    questionInput.disabled = isLoading;
+}
 
-askButton.addEventListener("click", async () => {
-    if (!questionInput.value.trim()) {
-        answerBox.innerHTML = "❌ Please enter a question";
+function showMessage(element, message, type = 'info') {
+    element.innerHTML = message;
+    element.className = `${element.className.split(' ')[0]} ${type}`;
+}
+
+async function handleQuestionSubmit() {
+    const question = questionInput.value.trim();
+    if (!question) {
+        showMessage(answerBox, "❌ Please enter a question", 'error');
         return;
     }
 
-    answerBox.innerHTML = "🧠 Thinking...";
-    askButton.disabled = true;
+    setLoading(true);
+    showMessage(answerBox, "🧠 Thinking...");
 
     try {
         const response = await fetch("http://localhost:5000/ask", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ question: questionInput.value.trim() })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question })
         });
 
+        const data = await response.json();
+        
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            throw new Error(data.error || `HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json();
-        answerBox.innerHTML = data.answer;
+        showMessage(answerBox, data.answer, 'success');
+        questionInput.value = ''; // Clear input after successful response
     } catch (error) {
-        answerBox.innerHTML = `❌ Error: ${error.message}`;
+        showMessage(answerBox, `❌ Error: ${error.message}`, 'error');
         console.error("Question error:", error);
     } finally {
-        askButton.disabled = false;
+        setLoading(false);
     }
-});
+}
 
-pdfUpload.addEventListener("change", async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
+async function handleFileUpload(files) {
+    if (!files.length) return;
 
-    // Validate file type
-    if (!file.type.includes('pdf')) {
-        previewElement.innerHTML = "❌ Please upload a PDF file";
-        pdfUpload.value = ''; // Reset file input
+    const invalidFiles = Array.from(files).filter(file => !file.type.includes('pdf'));
+    if (invalidFiles.length) {
+        showMessage(previewElement, "❌ Please upload only PDF files", 'error');
         return;
     }
 
     const formData = new FormData();
-    formData.append("pdf", file);
-    previewElement.innerHTML = "📤 Uploading and processing PDF...";
+    Array.from(files).forEach(file => formData.append("pdf", file));
+
+    showMessage(previewElement, "📤 Uploading and processing PDFs...");
+    questionInput.disabled = true;
     askButton.disabled = true;
 
     try {
@@ -62,27 +70,47 @@ pdfUpload.addEventListener("change", async (event) => {
             body: formData
         });
 
+        const data = await response.json();
+        
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            throw new Error(data.error || `HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json();
-        previewElement.innerHTML = `✅ ${data.message}`;
-        askButton.disabled = false; // Enable ask button after successful upload
+        showMessage(previewElement, `✅ ${data.message}`, 'success');
+        questionInput.disabled = false;
+        askButton.disabled = false;
+        questionInput.focus();
     } catch (error) {
-        previewElement.innerHTML = `❌ Error: ${error.message}`;
+        showMessage(previewElement, `❌ Error: ${error.message}`, 'error');
         console.error("Upload error:", error);
-        askButton.disabled = true;
-        pdfUpload.value = ''; // Reset file input on error
+    }
+}
+
+// Event Listeners
+askButton.addEventListener("click", handleQuestionSubmit);
+
+questionInput.addEventListener("keypress", (event) => {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        handleQuestionSubmit();
     }
 });
 
-// Add input validation for question
-questionInput.addEventListener('input', () => {
-    if (!questionInput.value.trim() && !askButton.disabled) {
-        askButton.disabled = true;
-    } else if (questionInput.value.trim() && askButton.disabled) {
-        askButton.disabled = false;
-    }
+pdfUpload.addEventListener("change", (event) => handleFileUpload(event.target.files));
+
+// Drag and drop handling
+uploadArea.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    uploadArea.style.borderColor = 'var(--primary-color)';
+});
+
+uploadArea.addEventListener("dragleave", (e) => {
+    e.preventDefault();
+    uploadArea.style.borderColor = '#cbd5e1';
+});
+
+uploadArea.addEventListener("drop", (e) => {
+    e.preventDefault();
+    uploadArea.style.borderColor = '#cbd5e1';
+    handleFileUpload(e.dataTransfer.files);
 });

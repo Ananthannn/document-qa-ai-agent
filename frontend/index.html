@@ -3,36 +3,52 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>PDF Q&A Assistant</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
     <div class="container">
-        <div class="left-panel">
-            <h2>📘 Read a PDF</h2>
-            <form id="uploadForm">
-                <input type="file" 
-                       id="pdfUpload" 
-                       accept=".pdf,application/pdf" 
-                       required />
-                <small>Supported format: PDF only</small>
-            </form>
-            <div id="pdfPreview">PDF Preview will appear here</div>
-        </div>
-        <div class="right-panel">
-            <h2>Ask a Question</h2>
-            <div class="question-section">
-                <input type="text" 
-                       id="questionInput" 
-                       placeholder="Ask a question about the document" 
-                       required />
-                <button id="askButton" disabled>Answer</button>
-            </div>
-            <div id="answerDisplay" class="answer-box">
-                Answer will appear here...
-            </div>
-        </div>
+        <header>
+            <h1>🤖 PDF Q&A Assistant</h1>
+        </header>
+        
+        <main>
+            <section class="upload-section">
+                <h2>📚 Upload Documents</h2>
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" 
+                           id="pdfUpload" 
+                           accept=".pdf,application/pdf" 
+                           multiple 
+                           class="file-input" />
+                    <div class="upload-placeholder">
+                        <p>Drop PDF files here or click to upload</p>
+                        <small>Supported format: PDF only</small>
+                    </div>
+                </div>
+                <div id="pdfPreview" class="preview-area"></div>
+            </section>
+
+            <section class="qa-section">
+                <h2>💭 Ask Questions</h2>
+                <div class="question-area">
+                    <div class="input-group">
+                        <input type="text" 
+                               id="questionInput" 
+                               placeholder="Type your question and press Enter..." 
+                               autocomplete="off"
+                               disabled />
+                        <button id="askButton" disabled>
+                            <span class="button-text">Ask</span>
+                            <span class="loader"></span>
+                        </button>
+                    </div>
+                    <div id="answerDisplay" class="answer-box">
+                        Upload a PDF to start asking questions
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
     <script src="app.js"></script>
 </body>
