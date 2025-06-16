@@ -1,3 +1,8 @@
+# Backend data files
+backend/current_pdf.json
+backend/vector_db/*.pkl
+backend/vector_stores/*.json
+
 # Python
 __pycache__/
 *.py[cod]
@@ -53,3 +58,15 @@ desktop.ini
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Node
+frontend/node_modules/
+frontend/build/
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
