@@ -62,24 +62,6 @@ Visit [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 🧪 Running Tests
-
-### Frontend
-
-```bash
-cd frontend
-npm test
-```
-
-### Backend
-
-```bash
-cd backend
-pytest
-```
-
----
-
 ## 🌐 Connect with Me
 
 [![Instagram](https://img.shields.io/badge/Instagram-%23E4405F.svg?style=flat&logo=instagram&logoColor=white)](https://www.instagram.com/v_ananthann_?igsh=MWFlcHo5a2pvNm5yaA==)
